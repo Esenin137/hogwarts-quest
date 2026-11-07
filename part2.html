@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Тайна картины. Часть 2: Сова</title>
+<style>
+:root{--bg:#f3efe6;--pan:#fff;--ink:#1f2433;--mut:#7a7f90;--acc:#2f3a67;--me:#2f3a67;--meink:#fff;--in:#fff;--line:#ddd6c6;--gold:#c8962e}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#12162a;--pan:#1b2040;--ink:#ece8dc;--mut:#8f94ad;--acc:#e0b050;--me:#e0b050;--meink:#1b1a14;--in:#252b52;--line:#303766}}
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.4 Georgia,'Times New Roman',serif;padding-top:env(safe-area-inset-top,0);padding-bottom:env(safe-area-inset-bottom,0)}
+#app{height:100%;max-width:480px;margin:0 auto;display:flex;flex-direction:column;background:var(--pan);position:relative}
+header{display:flex;align-items:center;gap:10px;padding:8px 14px}
+.av{width:36px;height:36px;border-radius:50%;background:var(--acc);color:var(--meink);display:grid;place-items:center;font-weight:700;flex:none}
+header b{display:block;line-height:1.2}header small{color:var(--mut)}
+#nb{margin-left:auto;background:none;border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:6px 10px;font:inherit;font-size:14px}
+#tabs{display:flex;gap:6px;padding:0 10px 8px;overflow-x:auto;border-bottom:1px solid var(--line)}
+.tab{position:relative;flex:none;display:flex;align-items:center;gap:6px;background:none;border:1.5px solid var(--line);border-radius:20px;padding:4px 12px 4px 5px;color:var(--ink);font:inherit;font-size:14px}
+.tab .av{width:26px;height:26px;font-size:13px}
+.tab.on{border-color:var(--acc);background:var(--bg)}
+.tab i{font-style:normal;background:#d6453d;color:#fff;border-radius:10px;min-width:19px;height:19px;font-size:12px;display:grid;place-items:center;padding:0 5px}
+.tab.off .av{opacity:.45}
+#log{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:6px;background:var(--bg)}
+.b{max-width:82%;padding:7px 12px;border-radius:16px;background:var(--in);align-self:flex-start;border-bottom-left-radius:4px}
+.b.me{align-self:flex-end;background:var(--me);color:var(--meink);border-radius:16px 16px 4px 16px}
+.b small{display:block;text-align:right;color:var(--mut);font-size:11px}.b.me small{color:inherit;opacity:.7}
+.sys{align-self:center;color:var(--mut);font-size:13px;font-style:italic;text-align:center}
+.ph{border:2px dashed var(--gold);font-style:italic}
+#ch{padding:10px 14px;display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--line);max-height:42%;overflow-y:auto}
+#ch:empty{display:none}
+button.c{background:var(--pan);color:var(--ink);border:1.5px solid var(--acc);border-radius:14px;padding:11px 14px;font:inherit;text-align:left}
+button.c:active{background:var(--acc);color:var(--meink)}
+.sc{padding:22px 18px;overflow-y:auto;flex:1}
+.sc h1{font-size:24px;margin:0 0 6px}.sc p{color:var(--mut);margin:0 0 14px}
+.sc input{width:100%;font:inherit;padding:11px;border:1.5px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);margin-bottom:10px}
+.sc .c{display:block;width:100%;margin-bottom:8px}
+#nbp{position:absolute;inset:0;background:var(--pan);padding:18px;overflow:auto;display:none}
+</style></head><body>
+<div id="app"></div>
+<script>
+var P,C,act,tm,A=document.getElementById('app');
+function T(s){return s.replace(/\{n\}/g,P.n).replace(/\[([^|\]]*)\|([^\]]*)\]/g,function(_,a,b){return P.g=='ж'?a:b})}
+var N={mira:['Мира','М'],agata:['Бабушка Агата','Б'],theo:['Тео','Т'],unk:['???','?']};
+var FIN={
+words:['Слова','Ты победил[а|] словом, не заклинанием. Тишина после боя была странной.','ты вообще спишь? я всё думаю про тот вечер, когда ты заговорил[а|] вместо того чтобы колдовать'],
+win:['Победа','Дуэль выиграна, школа аплодировала. Но радость была недолгой.','ты герой школы, а мне почему-то страшно. победа слишком гладкая, тебе не кажется?'],
+compass:['Компас','Компас повёл тебя туда, куда не вёл никого.','слушай, твой компас дома тоже крутится? мой сегодня поймал какой-то сигнал'],
+orvin:['Жертва Орвина','Орвин исчез, закрыв проход. Портрет на седьмом этаже опустел.','рама пустая. ты видел[а|]? Орвин не вернулся. я не хотела писать, но молчать не могу'],
+mira:['Выбор Миры','В самый трудный миг ты выбрал[а|] Миру.','я не знаю, как сказать спасибо. поэтому пишу в полночь, как трусиха'],
+theo:['Выбор Тео','В самый трудный миг ты выбрал[а|] Тео.','Тео в сети, но мне не отвечает. вы поговорили после всего?']};
+/* узел: m — реплики, c — выборы [текст, ответ-реплики, следующий узел, эффект], on — кого разбудить */
+var X={
+mira0:{m:[],c:[
+["Привет, Мира. Как ты?",["держусь. честно, плохо спала. но сейчас хочу показать кое-что"],"mira1",{mi:1}],
+["Откуда у меня этот мессенджер?",["я думала, ты мне скажешь! он пришёл в письме от лавки. странно, да?"],"mira1",{note:"Сова заработала именно на каникулах. Её прислали вместе с письмом от лавки палочек."}]]},
+mira1:{on:["agata"],m:["ph:[Фото: палочка с трещиной вдоль рукояти]","это палочка из нашей лавки. я нашла её в дедушкином сундуке"],c:[
+["Откуда она у тебя?",["с чердака. сундук был заперт, а сегодня замок сам щёлкнул"],"mira2",{note:"Сундук на чердаке у Миры открылся сам."}],
+["Чья это палочка?",["не знаю. на рукояти выжжена буква «Э»"],"mira2",{note:"На сломанной палочке выжжена буква «Э»."}],
+["Без загадок, Мира",["я не загадываю! мне просто страшно. ладно, слушай"],"mira2",{mi:-1}]]},
+mira2:{on:["theo"],m:["в сундуке был дедушкин дневник. там написано: «две палочки из одного пера, для двоих, кого свяжет судьба»","я проверила записи лавки: твоя палочка могла быть из той же партии"],c:[
+["Пришли страницу дневника",["держи","ph:[Фото: страница дневника, чернила выцвели. Видно обрывок: «...Агата просила молчать...»]"],"mira3",{mi:1,note:"В дневнике дедушки Миры есть строка про Агату: «просила молчать»."}],
+["Я спрошу у бабушки",["да, спроси. только осторожно, ладно?"],"mira3",{}]]},
+mira3:{m:["пиши, как узнаешь что-нибудь. я тут"],c:[]},
+agata0:{m:["{n}, спустись, чай остывает. И не прячь телефон","я нашла кое-что в старом комоде","ph:[Фото: школьный снимок, 1971 год. Юная Агата рядом с юношей, очень похожим на Орвина]"],c:[
+["Это Орвин на фото?",["похож. но не спеши с выводами, милый[а|]"],"agata1",{ag:1,note:"На школьном фото 1971 года Агата стоит рядом с юношей, похожим на Орвина."}],
+["Бабушка, я справлюсь с правдой",["знаю. поэтому и боюсь. не сегодня"],"agata1",{ag:1}],
+["Хорошо, расскажешь, когда будешь готова",["умница. чай с корицей ждёт"],"agata1",{}]]},
+agata1:{m:["одно скажу: то, что я шепнула тогда, до сих пор живёт в школе"],c:[
+["Какое слово?",["нет. узнаешь сам[а|], когда найдёшь ключ"],"agata2",{note:"Агата намекнула на «ключ», связанный с её шёпотом."}],
+["Не буду давить",["спасибо, [внучка|внучек]"],"agata2",{ag:1}]]},
+agata2:{on:["unk"],m:["и проверь, как там Тео. он вечером писал мне. странный мальчик, очень напуган"],c:[]},
+theo0:{m:["sys:Тео ждёт ответа","ты там? не говори Мире","в тайной комнате я забрал одну вещь. думал, на минуту","ph:[Фото: маленький медный ключ с гравировкой «Эльм»]"],c:[
+["Покажи мне её завтра",["ладно. только никому"],"theo1",{th:1,note:"Тео забрал из тайной комнаты медный ключ с именем «Эльм»."}],
+["Ты обязан рассказать Мире",["нет! всё, забудь, что я писал"],"theo1",{th:-1,note:"Тео забрал из тайной комнаты ключ с именем «Эльм»."}],
+["Не открывай ничего, жди меня",["ждать... хорошо. она сегодня шепчет громче"],"theo1",{th:1,note:"Тео забрал из тайной комнаты медный ключ с именем «Эльм»."}]]},
+theo1:{m:["она шепчет одно слово: «Эльм». ты слышал[а|] это имя?"],c:[
+["Слышал[а|]. Расскажу в школе",["тогда я выдержу"],"theo2",{th:1}],
+["Нет. Но я проверю",["спасибо, что не смеёшься"],"theo2",{}]]},
+theo2:{m:["спокойной ночи. если что, я не сплю"],c:[]},
+theoOff:{m:["sys:Тео был в сети давно","ладно, ты занят[а|]. я сам","sys:Тео вышел из чата"],c:[]},
+unk0:{m:["Эльм не ушёл. Никому не говори, что ключ у мальчика","и береги Вайолет. Или того, кто назвался так"],c:[
+["Кто ты?",["тот, кто был там до тебя"],"unk1",{}],
+["Откуда ты знаешь про ключ?",["видел. ночью, в тайной комнате"],"unk1",{note:"Неизвестный видел, как Тео брал ключ."}],
+["Я всё расскажу Тео",["тогда ключ найдёт его раньше, чем ты думаешь"],"unk1",{th:-1}]]},
+unk1:{m:["sys:Номер недоступен"],c:[]}};
+function start(){A.innerHTML='<div class=sc><h1>Тайна картины<br>Часть 2: «Сова»</h1><p>Осенние каникулы, 2026 год. Давай вспомним, чем всё закончилось.</p><input id=nm placeholder="Имя героя"><button class=c data-g=ж>Я девочка</button><button class=c data-g=м>Я мальчик</button></div>';
+A.querySelectorAll('[data-g]').forEach(function(b){b.onclick=function(){P={n:document.getElementById('nm').value.trim()||'Герой',g:b.dataset.g,f:'',fr:{mi:0,th:0,ag:0},notes:[]};fin()}})}
+function fin(){var h='<div class=sc><h1>Чем закончилась первая часть?</h1><p>Выбери свой финал. С него начнётся переписка.</p>';
+for(var k in FIN)h+='<button class=c data-f='+k+'><b>'+FIN[k][0]+'</b><br><small>'+T(FIN[k][1])+'</small></button>';
+A.innerHTML=h+'</div>';A.querySelectorAll('[data-f]').forEach(function(b){b.onclick=function(){P.f=b.dataset.f;chat()}})}
+function chat(){tm=23*60+10;C={};for(var k in N)C[k]={log:[],un:0,on:0,pend:null,wait:0,done:0,st:'в сети',typ:0};
+A.innerHTML='<header><div class=av id=av></div><div><b id=hn></b><small id=hs></small></div><button id=nb>Блокнот</button></header><div id=tabs></div><div id=log></div><div id=ch></div><div id=nbp></div>';
+document.getElementById('nb').onclick=nb;
+X.mira0.m=["sys:Суббота, 31 октября 2026. Дом бабушки Агаты. В школе связь глушат чары, а сегодня в телефоне появилась сова.",FIN[P.f][2]];
+unlock('mira');show('mira')}
+function unlock(id){var c=C[id];if(c.on)return;c.on=1;enter(id,id=='unk'?'unk0':id+'0')}
+function enter(id,nid,reply){var c=C[id],n=X[nid];c.pend=null;(n.on||[]).forEach(unlock);
+play(id,(reply||[]).concat(n.m),function(){c.pend=n.c;if(!n.c.length){c.done=1;fl()}ch()})}
+function play(id,L,done){var c=C[id],i=0;(function nx(){if(i>=L.length){c.typ=0;hdr();done&&done();return}var l=L[i++];
+if(l.slice(0,4)=='sys:'){push(id,'sys',l.slice(4));setTimeout(nx,500);return}
+c.typ=1;hdr();setTimeout(function(){c.typ=0;var ph=l.slice(0,3)=='ph:';push(id,ph?'ph':'in',ph?l.slice(3):l);hdr();setTimeout(nx,300)},500+Math.min(l.length*9,800))})()}
+function stamp(){tm+=1+Math.floor(Math.random()*2);var m=tm%60;return Math.floor(tm/60)%24+':'+(m<10?'0':'')+m}
+function push(id,t,x){var c=C[id],e=[t,T(x),t=='sys'?'':stamp()];c.log.push(e);if(act==id)draw(e);else if(t!='me'&&t!='sys')c.un++;tabs()}
+function draw(e){var L=document.getElementById('log'),d=document.createElement('div');
+d.className=e[0]=='sys'?'sys':'b'+(e[0]=='me'?' me':e[0]=='ph'?' ph':'');d.innerHTML=e[1]+(e[2]?'<small>'+e[2]+'</small>':'');L.appendChild(d);L.scrollTop=1e5}
+function tabs(){var h='';for(var k in C){var c=C[k];if(!c.on)continue;h+='<button class="tab'+(k==act?' on':'')+(c.st=='офлайн'?' off':'')+'" data-t='+k+'><div class=av>'+N[k][1]+'</div>'+N[k][0].replace('Бабушка ','')+(c.un?'<i>'+c.un+'</i>':'')+'</button>'}
+var t=document.getElementById('tabs');t.innerHTML=h;t.querySelectorAll('[data-t]').forEach(function(b){b.onclick=function(){show(b.dataset.t)}})}
+function hdr(){if(!act)return;var c=C[act];document.getElementById('av').textContent=N[act][1];document.getElementById('hn').textContent=N[act][0];document.getElementById('hs').textContent=c.typ?'печатает…':c.st}
+function show(id){act=id;C[id].un=0;document.getElementById('log').innerHTML='';C[id].log.forEach(draw);hdr();tabs();ch()}
+function ch(){var box=document.getElementById('ch');box.innerHTML='';var c=C[act];if(!c||!c.pend)return;
+if(!c.pend.length){if(all()){box.innerHTML='<button class=c id=rs>Блокнот тайн: что мы узнали</button><button class=c id=rr>Начать заново</button>';document.getElementById('rs').onclick=nb;document.getElementById('rr').onclick=start}return}
+c.pend.forEach(function(o){var b=document.createElement('button');b.className='c';b.textContent=T(o[0]);b.onclick=function(){pick(act,o)};box.appendChild(b)})}
+function pick(id,o){var c=C[id];c.pend=null;document.getElementById('ch').innerHTML='';push(id,'me',o[0]);var f=o[3]||{};
+for(var k in f)if(k!='note')P.fr[k]+=f[k];if(f.note&&P.notes.indexOf(T(f.note))<0)P.notes.push(T(f.note));
+var t=C.theo;if(id!='theo'&&t.on&&t.pend&&t.pend.length&&++t.wait>=4){t.pend=null;t.st='офлайн';P.fr.th--;P.notes.push("Тео обиделся и ушёл офлайн: ты не ответил вовремя.");t.done=1;play('theo',X.theoOff.m,function(){fl();ch()});tabs()}
+enter(id,o[2],o[1])}
+function all(){for(var k in C)if(!C[k].on||!C[k].done)return 0;return 1}
+function fl(){if(all()){C[act].pend=C[act].pend||[];ch()}}
+function nb(){var p=document.getElementById('nbp');var h='<h1 style="margin:0 0 10px">Блокнот тайн</h1>';
+h+=P.notes.length?P.notes.map(function(n){return '<p>• '+n+'</p>'}).join(''):'<p>Пока пусто.</p>';
+h+='<p style="color:var(--mut)">Мира '+P.fr.mi+', Тео '+P.fr.th+', Агата '+P.fr.ag+'</p><button class=c style="width:100%" id=cl>Закрыть</button>';
+p.innerHTML=h;p.style.display='block';document.getElementById('cl').onclick=function(){p.style.display='none'}}
+function mk(){try{var S=JSON.parse(localStorage.getItem('hq')||'null'),E=JSON.parse(localStorage.getItem('hq_end')||'[]'),M={v4a:'words',v4b:'win',v4c:'compass',v4d:'orvin',v4m:'mira',v4t:'theo'},e=M[(S&&S.end)||E[E.length-1]];if(S&&e&&S.n)return{n:S.n,g:S.g=='f'?'ж':'м',f:e,fac:S.f||'',fr:{mi:S.mira|0,th:S.teo|0,ag:0},love:S.love|0,trust:S.trust|0,notes:[]}}catch(x){}return null}
+function boot(){var s=mk();if(!s){start();return}A.innerHTML='<div class=sc><h1>С возвращением, '+s.n+'!</h1><p>Нашёл сохранение первой части. Финал: «'+FIN[s.f][0]+'».</p><button class=c id=y>Продолжить с этого финала</button><button class=c id=z>Выбрать финал вручную</button></div>';document.getElementById('y').onclick=function(){P=s;chat()};document.getElementById('z').onclick=start}
+boot();
+</script></body></html>
