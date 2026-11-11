@@ -1,0 +1,20 @@
+{
+  "name": "Тайна картины: Дилогия",
+  "short_name": "Тайна картины",
+  "description": "Интерактивный текстовый квест и мистический мессенджер «Сова» в мире школы чародейства Эйдемор.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b0715",
+  "theme_color": "#0b0715",
+  "lang": "ru",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
